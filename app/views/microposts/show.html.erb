@@ -1,0 +1,62 @@
+<p id="notice"><%= notice %></p>
+
+<div class="form-basic">
+  <div class="form-title-row">
+
+
+    <div class="post-box">
+      <span class="username"><%#= link_to @micropost.user.username.capitalize , user_path(@micropost.user.id) %></span>
+      <span class="username"><%= link_to @user["username"].capitalize , user_path(@user["id"]) %></span>
+      <div class="content">
+        <%= @micropost.content %>
+      </div>
+
+      <div class="links">
+        <%# if @micropost.have_liked(current_user) %>
+            <%#= link_to inline_svg("liked.svg", size: '16px * 16px'), micropost_path(@micropost.id) %>
+        <%# else %>
+            <%= link_to inline_svg("like.svg", size: '16px * 16px'), micropost_path(@micropost.id) %>
+        <%# end %>
+        <%= @likes %>
+        <span class="date"><%#= @micropost.created_at.to_formatted_s(:short) %></span>
+        <%#= @micropost.likes.count %>
+        <%= link_to inline_svg("comment.svg", size: '16px * 16px'), micropost_path(@micropost.id) %>
+        <%#= @micropost.comments.count %>
+        <%= @comments %>
+      </div>
+    </div>
+
+    <%# @micropost.comments.each do |comment| %>
+        <span class="username"><%#= link_to @micropost.user.username.capitalize , user_path(@micropost.user.id) %></span>
+        <%#= comment.content %>
+        <br/>
+    <%# end %>
+
+    <div class="comment">
+    <table>
+    <% @comment_list.each do |comment| %>
+      <% @user_comment = execute_statement('SELECT  "users".* FROM "users" WHERE "users"."id" = ' + comment["user_id"].to_s + ' LIMIT 1')[0] %>
+        <tr>
+            <td width="10%">
+              <%= link_to inline_svg("like.svg", size: '16px * 16px'),  "/like_comment?id=#{@micropost["id"]}&comment_id=#{comment["id"]}" %>
+              <%= execute_statement('SELECT COUNT(*) FROM "likes" WHERE "likes"."comment_id" = ' + comment["id"].to_s)[0]["count"] %>
+            </td>
+            <td><span class="username"><%= link_to @user_comment["username"].capitalize , :controller => 'users', :action => 'feed', :id => comment["user_id"].to_i %></span></td>
+            <td><%= comment["content"] %></td>
+          <% if current_user.id == comment["user_id"] %>
+            <td width="10%">
+              <%= link_to inline_svg("edit.svg", size: '12
+             px * 12px'), edit_comment_path(comment["id"]) %>
+              <%= link_to inline_svg("delete.svg", size: '
+             12px * 12px'), comment_path(comment["id"]), method: :delete, data: { confirm: 'Are you sure?' }   %>
+            </td>
+          <% end %>
+        </tr>
+    <% end %>
+    </table>
+      </div>
+
+    <%= link_to "Add Comment", new_comment_path(micropost_id: @micropost.id) %><br/><br/>
+    <%= link_to 'Back', microposts_path %>
+  </div>
+</div>

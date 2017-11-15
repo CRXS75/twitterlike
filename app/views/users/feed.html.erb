@@ -1,0 +1,32 @@
+<div class="form-basic">
+  <div class="form-title-row">
+
+    <div class="form-title-row">
+      <h1>Feed <%= @user.username %></h1>
+    </div>
+
+    <table>
+      <% @user.microposts.each do |micropost| %>
+          <tr>
+            <div class="post-box">
+              <span class="username"><%= link_to micropost.user.username.capitalize , user_path(micropost.user.id) %></span>
+              <div class="content">
+                <%= micropost.content %>
+              </div>
+              <span class="date"><%= micropost.created_at.to_formatted_s(:short) %></span>
+              <div class="links">
+                <% if micropost.have_liked(current_user) %>
+                    <%= link_to inline_svg("liked.svg", size: '16px * 16px'), "/like?id=#{micropost.id}" %>
+                <% else %>
+                    <%= link_to inline_svg("like.svg", size: '16px * 16px'), "/like?id=#{micropost.id}" %>
+                <% end %>
+                <%= micropost.likes.count %>
+                <%= link_to inline_svg("comment.svg", size: '16px * 16px'), micropost_path(micropost.id) %>
+                <%= micropost.comments.count %>
+              </div>
+            </div>
+          </tr>
+      <% end %>
+    </table>
+  </div>
+</div>

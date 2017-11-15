@@ -1,0 +1,31 @@
+<div class="center-block">
+  <div class="form-basic">
+    <div class="form-title-row">
+      <h1>Login</h1>
+    </div>
+
+    <div class="error">
+    </div>
+
+    <%= form_for(:session, :url => sessions_path) do |f| %>
+
+        <div class="field">
+          <%= f.label "Email/Username" %>
+          <%= f.text_field :login %>
+        </div>
+
+        <div class="field">
+          <%= f.label "Password" %>
+          <%= f.password_field :password %>
+        </div>
+
+        <div class='actions'>
+          <%= f.submit "Connect" %>
+        </div>
+
+    <% end %>
+
+
+    <%= link_to 'Register', "users/new" %>
+  </div>
+</div>

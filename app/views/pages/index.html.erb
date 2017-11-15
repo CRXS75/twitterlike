@@ -1,0 +1,17 @@
+<div id="main-page">
+  <span id="welcome">
+    <% if signed_in? %>
+      Your logged in Beijing Jiaotong TwitterLike
+    <% else %>
+      Welcome to the Beijing Jiaotong TwitterLike
+    <% end %>
+  </span>
+  <% if !current_user %>
+  <table id="button-list">
+    <tr>
+      <td><%= button_to "Log In", "/signin", :method => 'get', :class => 'full-button' %></td>
+      <td><%= button_to "Register", "/signup", :method => 'get', :class => 'empty-button' %></td>
+    </tr>
+  </table>
+      <% end %>
+</div>

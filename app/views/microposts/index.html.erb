@@ -1,0 +1,60 @@
+<div class="form-basic">
+  <div class="form-title-row">
+
+    <p id="notice"><%= notice %></p>
+
+    <div class="form-title-row">
+      <h1>Feed</h1>
+    </div>
+
+    <% @microposts = execute_statement('SELECT "microposts".* FROM "microposts" ORDER BY created_at DESC').as_json %>
+    <% #@microposts = execute_statement('SELECT "microposts".* FROM "microposts" ORDER BY created_at DESC').as_json %>
+
+    <table>
+      <% @microposts.each do |micropost| %>
+        <tr>
+          <div class="post-box">
+            <%  @user = execute_statement('SELECT  "users".* FROM "users" WHERE "users"."id" = ' + micropost["user_id"].to_s + ' LIMIT 1').as_json[0] %>
+            <span class="username"><%= link_to @user["username"].capitalize , :controller => 'users', :action => 'feed', :id => micropost["user_id"].to_i %></span>
+            <% if current_user.id == micropost["user_id"] %>
+            <div class="icons">
+              <%= link_to inline_svg("edit.svg", size: '12
+             px * 12px'), edit_micropost_path(micropost["id"]) %>
+              <%#= link_to 'Delete', "/microposts/#{microp
+ost["id"]}" %>
+              <%= link_to inline_svg("delete.svg", size: '
+             12px * 12px'), micropost_path(micropost["id"]), method: :delete, data: { confirm: 'Are you sure?' }   %>
+            </div>
+                <% end %>
+            <span class="username"><%#= link_to micropost.
+user.username.capitalize , :controller => 'users', :action => 'feed', :id => micropost.user.id %></span>
+            <div class="content">
+              <%#= micropost.content %>
+              <%= micropost["content"] %>
+            </div>
+            <span class="date"><%= micropost["created_at"].to_date.to_formatted_s(:short) %></span>
+            <span class="date"><%#= micropost.created_at.t
+o_formatted_s(:short) %></span>
+            <div class="links">
+              <%= link_to inline_svg("like.svg", size: '16px * 16px'), "/like?id=#{micropost["id"]}" %>
+              <%# if micropost.have_liked(current_user) %>
+                  <%#= link_to inline_svg("liked.svg", size: '16px * 16px'), "/like?id=#{micropost.id}" %>
+              <%# else %>
+              <%#= link_to inline_svg("like.svg", size: '16px * 16px'), "/like?id=#{micropost.id}" %>
+              <%# end %>
+              <%#= micropost.likes.count %>
+              <% @likes = execute_statement('SELECT COUNT(*) FROM "likes" WHERE "likes"."micropost_id" = ' + micropost["id"].to_s) %>
+              <%= @likes[0]["count"] %>
+              <%#= link_to inline_svg("comment.svg", size: '16px * 16px'), micropost_path(micropost.id) %>
+              <%= link_to inline_svg("comment.svg", size: '16px * 16px'), micropost_path(micropost["id"]) %>
+              <% @comments = execute_statement('SELECT COUNT(*) FROM "comments" WHERE "comments"."micropost_id" = ' + micropost["id"].to_s) %>
+              <%#= link_to inline_svg("comment.svg", size: '16px * 16px'), micropost_path(micropost.id) %>
+              <%= @comments[0]["count"] %>
+              <%#= micropost.comments.count %>
+             </div>
+          </div>
+        </tr>
+      <% end %>
+    </table>
+  </div>
+</div>

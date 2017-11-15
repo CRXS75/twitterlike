@@ -1,0 +1,50 @@
+// Place all the styles related to the microposts controller here.
+// They will automatically be included in application.css.
+// You can use Sass (SCSS) here: http://sass-lang.com/
+
+.post-box {
+  border: solid #4c565e 2px;
+  margin: 15px;
+  padding: 10px;
+  text-align: left;
+}
+
+.post-box .username {
+  text-align: left;
+  color: deepskyblue;
+}
+
+.post-box .date {
+  text-align: right;
+  font-weight: 300;
+  font-size: smaller;
+  float: left;
+  color: darkgray;
+}
+
+.post-box .content {
+  font-weight: normal;
+  margin: 10px;
+}
+
+.post-box .links {
+  text-align: right;
+  margin: 5px;
+}
+
+.post-box .icons {
+  text-align: right;
+  float: right;
+}
+
+.comment {
+  margin: 5px;
+  padding: 5px;
+  text-align: left;
+  font-weight: normal;
+  padding-left: 40px;
+}
+
+.comment table tr{
+  border: dotted black 1px;
+}
