@@ -1,10 +1,30 @@
 class UsersController < ApplicationController
-  before_action :set_user, only: [:show, :edit, :update, :destroy, :feed]
+  before_action :set_user, only: [:show, :edit, :update, :destroy, :feed, :following, :followers]
 
   # GET /users
   # GET /users.json
   def index
     @users = User.all
+  end
+
+  def following
+    @follow = @user.following
+  end
+
+  def followers
+    @follow = @user.followers
+  end
+
+  def follow
+    u = User.find(params[:user_id])
+    current_user.follow(u)
+    redirect_to :back
+  end
+
+  def unfollow
+    u = User.find(params[:user_id])
+    current_user.unfollow(u)
+    redirect_to :back
   end
 
   # GET /users/1

@@ -8,6 +8,7 @@ class MicropostsController < ApplicationController
     # @microposts = Micropost.order('created_at DESC')
     # @test = tmp
     # @microposts = tmp.as_json
+    @microposts = execute_statement('SELECT "microposts".* FROM "microposts" ORDER BY created_at DESC')
   end
 
   # GET /microposts/1
@@ -101,7 +102,8 @@ class MicropostsController < ApplicationController
         end
       end
     end
-    redirect_to microposts_path
+    # redirect_to microposts_path
+    redirect_to :back
   end
 
   def create_comment_like

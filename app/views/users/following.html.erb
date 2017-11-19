@@ -1,0 +1,17 @@
+<div class="form-basic">
+  <div class="form-title-row">
+
+    <p id="notice"><%= notice %></p>
+
+    <div class="form-title-row">
+      <h1>Following</h1>
+    </div>
+
+    <table>
+    <% @follow.each do |fol| %>
+          <tr><%= link_to fol.username.capitalize, user_path(fol.id)%></tr><br/>
+    <% end %>
+    </table>
+
+  </div>
+</div>

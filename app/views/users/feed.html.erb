@@ -1,6 +1,18 @@
 <div class="form-basic">
+  <div class="left ">
+    <%= link_to "Following (#{@user.following.size})", following_user_path(@user.id) %> |
+    <%= link_to "Followers (#{@user.followers.size})", followers_user_path(@user.id) %>
+  </div>
+  <div class="right">
+    <% if current_user.following?(@user) %>
+        <%= link_to "Unfollow", :action => 'unfollow', :user_id => @user.id %>
+    <% elsif current_user == @user %>
+        <%= link_to current_user.username.capitalize, "" %>
+    <% else %>
+        <%= link_to "Follow", :action => 'follow', :user_id => @user.id %>
+    <% end %>
+  </div>
   <div class="form-title-row">
-
     <div class="form-title-row">
       <h1>Feed <%= @user.username %></h1>
     </div>
@@ -10,6 +22,12 @@
           <tr>
             <div class="post-box">
               <span class="username"><%= link_to micropost.user.username.capitalize , user_path(micropost.user.id) %></span>
+              <% if current_user.id == micropost["user_id"] %>
+                  <div class="icons">
+                    <%= link_to inline_svg("edit.svg", size: '12px * 12px'), edit_micropost_path(micropost.id) %>
+                    <%= link_to inline_svg("delete.svg", size: '12px * 12px'), micropost_path(micropost.id), method: :delete, data: { confirm: 'Are you sure?' }   %>
+                  </div>
+              <% end %>
               <div class="content">
                 <%= micropost.content %>
               </div>

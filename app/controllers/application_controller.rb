@@ -12,7 +12,7 @@ class ApplicationController < ActionController::Base
   end
 
   def execute_statement(sql)
-    ActiveRecord::Sanitization::ClassMethods.
+    # ActiveRecord::Sanitization::ClassMethods.
     results = ActiveRecord::Base.connection.execute(sql)
     if results.present?
       return results

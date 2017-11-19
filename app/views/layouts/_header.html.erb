@@ -13,7 +13,8 @@
    <nav>
      <% if current_user %>
          <%= link_to "Logout", "/signout" %>
-         <%= link_to current_user.username.capitalize, user_path(current_user) %>
+         <%= link_to current_user.username.capitalize, :controller => 'users', :action => 'feed', :id => current_user.id %>
+         <%= link_to "My account", user_path(current_user) %>
      <% end %>
    </nav>
 

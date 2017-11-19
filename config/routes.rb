@@ -14,6 +14,9 @@ Rails.application.routes.draw do
   resources :users
   get '/signup' => 'users#new'
   get '/user_feed' => 'users#feed'
+  # get '/follow' => 'users#following'
+  get '/follow' => 'users#follow'
+  get '/unfollow' => 'users#unfollow'
 
   get '/like' => 'microposts#create_like'
   get '/like_comment' => 'microposts#create_comment_like'

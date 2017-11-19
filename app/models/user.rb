@@ -23,6 +23,18 @@ class User < ApplicationRecord
 
   has_secure_password
 
+  def follow(nuser)
+    following << nuser
+  end
+
+  def unfollow(nuser)
+    following.delete(nuser)
+  end
+
+  def following?(nuser)
+    following.include?(nuser)
+  end
+
   def self.authenticate(login, submitted_password)
 
 

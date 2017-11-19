@@ -7,11 +7,10 @@
       <h1>Feed</h1>
     </div>
 
-    <% @microposts = execute_statement('SELECT "microposts".* FROM "microposts" ORDER BY created_at DESC').as_json %>
-    <% #@microposts = execute_statement('SELECT "microposts".* FROM "microposts" ORDER BY created_at DESC').as_json %>
-
     <table>
       <% @microposts.each do |micropost| %>
+          <% u = User.find(micropost["user_id"]) %>
+          <% if current_user.following?(u) || u == current_user %>
         <tr>
           <div class="post-box">
             <%  @user = execute_statement('SELECT  "users".* FROM "users" WHERE "users"."id" = ' + micropost["user_id"].to_s + ' LIMIT 1').as_json[0] %>
@@ -54,6 +53,7 @@ o_formatted_s(:short) %></span>
              </div>
           </div>
         </tr>
+              <% end %>
       <% end %>
     </table>
   </div>

@@ -188,6 +188,24 @@ body {
     margin-bottom: 55px;
 }
 
+.form-basic .left{
+    text-align: left;
+}
+
+.form-basic .right{
+    text-align: right;
+    margin-bottom: 20px;
+}
+
+.form-basic .right a{
+    font-weight: bold;
+    background-color: cornflowerblue;
+    padding: 10px 15px;
+    border-radius: 3px;
+    color: white;
+}
+
+
 /* The form title */
 
 .form-basic h1{
