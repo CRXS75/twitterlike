@@ -23,6 +23,11 @@ class User < ApplicationRecord
 
   has_secure_password
 
+  def self.search(search)
+    find_by_sql(['SELECT "users".* FROM "users" WHERE "users"."username" LIKE ?', '%' + search + '%'])
+    find_by_sql(['SELECT "users".* FROM "users" WHERE "users"."email" LIKE ?', '%' + search + '%'])
+  end
+
   def follow(nuser)
     following << nuser
   end
@@ -36,8 +41,6 @@ class User < ApplicationRecord
   end
 
   def self.authenticate(login, submitted_password)
-
-
     user = find_by_email(login)
     if user.nil?
       user = find_by_username(login)

@@ -10,22 +10,26 @@
       <% end %>
     </h1>
 
-   <nav>
-     <% if current_user %>
+    <% if current_user %>
+      <nav>
          <%= link_to "Logout", "/signout" %>
          <%= link_to current_user.username.capitalize, :controller => 'users', :action => 'feed', :id => current_user.id %>
          <%= link_to "My account", user_path(current_user) %>
-     <% end %>
-   </nav>
+      </nav>
 
-    <% if current_user %>
+      <ul>
+        <li>
+          <%= form_tag('/search', :method => "get", id: "search-form") do %>
+              <%= text_field_tag :search, params[:search], placeholder: "Search User" %>
+              <%= submit_tag "Search" %>
+          <% end %>
+        </li>
 
-  <ul>
-      <li>
-        <%= link_to "New Post", { :controller => 'microposts', :action => 'new'}, :class => 'full-button' %>
-      </li>
-    </ul>
-<% end %>
+        <li>
+          <%= link_to "New Post", { :controller => 'microposts', :action => 'new'}, :class => 'full-button' %>
+        </li>
+      </ul>
+    <% end %>
   </div>
 
 </header>

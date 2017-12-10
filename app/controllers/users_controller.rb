@@ -11,18 +11,26 @@ class UsersController < ApplicationController
     @follow = @user.following
   end
 
+  def search
+    unless params[:search].empty?
+      @users = User.search(params[:search])
+    else
+      @users = User.find_by_sql('SELECT "users".* FROM "users"')
+    end
+  end
+
   def followers
     @follow = @user.followers
   end
 
   def follow
-    u = User.find(params[:user_id])
+    u = User.find_by_sql(['SELECT "users".* FROM "users" WHERE "users"."id" = ? LIMIT 1',params[:user_id]])[0]
     current_user.follow(u)
     redirect_to :back
   end
 
   def unfollow
-    u = User.find(params[:user_id])
+    u = User.find_by_sql(['SELECT "users".* FROM "users" WHERE "users"."id" = ? LIMIT 1',params[:user_id]])[0]
     current_user.unfollow(u)
     redirect_to :back
   end
@@ -90,7 +98,8 @@ class UsersController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_user
-      @user = User.find(params[:id])
+      # @user = User.find(params[:id])
+      @user = User.find_by_sql(['SELECT "users".* FROM "users" WHERE "users"."id" = ? LIMIT 1', params[:id]])[0]
     end
 
     # Never trust parameters from the scary internet, only allow the white list through.

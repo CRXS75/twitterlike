@@ -17,6 +17,7 @@ Rails.application.routes.draw do
   # get '/follow' => 'users#following'
   get '/follow' => 'users#follow'
   get '/unfollow' => 'users#unfollow'
+  get '/search' => 'users#search'
 
   get '/like' => 'microposts#create_like'
   get '/like_comment' => 'microposts#create_comment_like'

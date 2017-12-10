@@ -8,18 +8,19 @@ class MicropostsController < ApplicationController
     # @microposts = Micropost.order('created_at DESC')
     # @test = tmp
     # @microposts = tmp.as_json
-    @microposts = execute_statement('SELECT "microposts".* FROM "microposts" ORDER BY created_at DESC')
+    @microposts = Micropost.find_by_sql('SELECT "microposts".* FROM "microposts" ORDER BY created_at DESC')
   end
 
   # GET /microposts/1
   # GET /microposts/1.json
   def show
-    @user = execute_statement('SELECT  "users".* FROM "users" WHERE "users"."id" = ' + @micropost.user_id.to_s + ' LIMIT 1')[0]
-    @likes = execute_statement('SELECT COUNT(*) FROM "likes" WHERE "likes"."micropost_id" = ' + @micropost.id.to_s)[0]["count"]
-    @comments = execute_statement('SELECT COUNT(*) FROM "comments" WHERE "comments"."micropost_id" = ' + @micropost.id.to_s)[0]["count"]
-    @comment_list = execute_statement('SELECT "comments".* FROM "comments" WHERE "comments"."micropost_id" = ' + @micropost.id.to_s + ' ORDER BY created_at ASC')
+    #@user = execute_statement('SELECT  "users".* FROM "users" WHERE "users"."id" = ' + @micropost.user_id.to_s + ' LIMIT 1')[0]
+    @user = User.find_by_sql(['SELECT "users".* FROM "users" WHERE "users"."id" = ? LIMIT 1', @micropost.user_id])[0]
+    @likes = Like.count_by_sql(['SELECT COUNT(*) FROM "likes" WHERE "likes"."id" = ?', @micropost.id])
+    @comments = Comment.count_by_sql(['SELECT COUNT(*) FROM "comments" WHERE "comments"."micropost_id" = ?', @micropost.id])
+    @comment_list = Comment.find_by_sql(['SELECT "comments".* FROM "comments" WHERE "comments"."micropost_id" = ? ORDER BY created_at ASC', @micropost.id])
   end
-
+1
   # GET /microposts/new
   def new
     @micropost = Micropost.new
@@ -68,13 +69,13 @@ class MicropostsController < ApplicationController
   # DELETE /microposts/1
   # DELETE /microposts/1.json
   def destroy
-    comments = @micropost.comments
+    comments = Comment.find_by_sql(['SELECT "comments".* FROM "comments" WHERE "comments"."micropost_id" = ?', @micropost.id])
     comments.each do |comment|
       comment.destroy
     end
     likes = @micropost.likes
     likes.each do |like|
-      like.destroy
+      execute_statement('DELETE FROM likes WHERE id = ' + like.id.to_s)
     end
     @micropost.destroy
     respond_to do |format|
@@ -85,43 +86,36 @@ class MicropostsController < ApplicationController
   end
 
   def create_like
-    @micropost = Micropost.find(params[:id])
+    @micropost = Micropost.find_by_sql(['SELECT "microposts".* FROM "microposts" WHERE "microposts"."id" = ? LIMIT 1', params[:id]])[0]
     unless @micropost.have_liked(current_user)
       likes = { user: current_user, micropost: @micropost }
       @like = Like.new(likes)
-      # time = Time.now.to_s(:db)
-      # insert = "[\"user_id\", #{@like.user_id}], [\"micropost_id\", #{@like.micropost_id}], [\"created_at\", \"#{time}\"], [\"updated_at\", \"#{time}\"]"
-      # execute_statement('INSERT INTO "likes" ("user_id", "micropost_id", "created_at", "updated_at") VALUES (' + insert + ') RETURNING "id"')
        @like.save
     else
-      likes = @micropost.likes
+      # likes = @micropost.likes
+      likes = Like.find_by_sql(['SELECT "likes".* FROM "likes" WHERE "likes"."micropost_id" = ?', @micropost.id])
       likes.each do |like|
         if like.user_id == current_user.id
           execute_statement('DELETE FROM likes WHERE id = ' + like.id.to_s)
-          # like.destroy
         end
       end
     end
-    # redirect_to microposts_path
     redirect_to :back
   end
 
   def create_comment_like
-    @micropost = Micropost.find(params[:id])
-    @comment = Comment.find(params[:comment_id])
+    @micropost = Micropost.find_by_sql(['SELECT "microposts".* FROM "microposts" WHERE "microposts"."id" =  ? LIMIT 1', params[:id]])[0]
+    @comment = Comment.find_by_sql(['SELECT "comments".* FROM "comments" WHERE "comments"."id" = ? LIMIT 1', params[:comment_id]])[0]
     unless @comment.have_liked(current_user)
       likes = { user: current_user, comment: @comment }
       @like = Like.new(likes)
       time = Time.now.to_s(:db)
-      # insert = "[\"user_id\", #{@like.user_id}], [\"micropost_id\", #{@like.micropost_id}], [\"created_at\", \"#{time}\"], [\"updated_at\", \"#{time}\"]"
-      # execute_statement('INSERT INTO "likes" ("user_id", "micropost_id", "created_at", "updated_at") VALUES (' + insert + ') RETURNING "id"')
       @like.save
     else
-      likes = @comment.likes
+      likes = Like.find_by_sql(['SELECT "likes".* FROM "likes" WHERE "likes"."comment_id" = ?', @comment.id])
       likes.each do |like|
         if like.user_id == current_user.id
           execute_statement('DELETE FROM likes WHERE id = ' + like.id.to_s)
-         # like.destroy
         end
       end
     end
@@ -132,12 +126,14 @@ class MicropostsController < ApplicationController
     # Use callbacks to share common setup or constraints between actions.
     def set_micropost
        # @micropost = Micropost.find(params[:id])
-      micropost = execute_statement('SELECT  "microposts".* FROM "microposts" WHERE "microposts"."id" = ' + params[:id].to_s + ' LIMIT 1')
-      @micropost = Micropost.new(micropost[0])
+      #micropost = execute_statement('SELECT  "microposts".* FROM "microposts" WHERE "microposts"."id" = ' + params[:id].to_s + ' LIMIT 1')
+      #@micropost = Micropost.new(micropost[0])
+      @micropost = Micropost.find_by_sql(['SELECT  "microposts".* FROM "microposts" WHERE "microposts"."id" = ? LIMIT 1', params[:id]])[0]
     end
 
     def set_edit
-      @micropost = Micropost.find(params[:id])
+      # @micropost = Micropost.find(params[:id])
+      @micropost = Micropost.find_by_sql(['SELECT "microposts".* FROM "microposts" WHERE "microposts"."id" = ? LIMIT 1', params[:id]])[0]
     end
 
     # Never trust parameters from the scary internet, only allow the white list through.

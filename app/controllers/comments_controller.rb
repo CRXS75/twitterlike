@@ -5,7 +5,8 @@ class CommentsController < ApplicationController
   # GET /comments
   # GET /comments.json
   def index
-    @comments = Comment.all
+    # @comments = Comment.all
+    @comments = Comment.find_by_sql('SELECT "comments".* FROM "comments"')
   end
 
   # GET /comments/1
@@ -16,7 +17,8 @@ class CommentsController < ApplicationController
   # GET /comments/new
   def new
     @comment = Comment.new
-    @micropost = Micropost.find(params[:micropost_id])
+    # @micropost = Micropost.find(params[:micropost_id])
+    @micropost = Micropost.find_by_sql(['SELECT "microposts".* FROM "microposts" WHERE "microposts"."id" = ? LIMIT 1', params[:micropost_id]])[0]
     @id = @micropost.id
   end
 
@@ -56,9 +58,9 @@ class CommentsController < ApplicationController
   # DELETE /comments/1.json
   def destroy
     id = @comment.micropost_id
-    likes = @comment.likes
+    likes = Like.find_by_sql(['SELECT "likes".* FROM "likes" WHERE "likes"."comment_id" = ?', @comment.id])
     likes.each do |like|
-      like.destroy
+      execute_statement('DELETE FROM likes WHERE id = ' + like.id.to_s)
     end
     @comment.destroy
     redirect_to micropost_path(id)
@@ -68,12 +70,14 @@ class CommentsController < ApplicationController
     # Use callbacks to share common setup or constraints between actions.
     def set_comment
       # @comment = Comment.find(params[:id])
-      comment = execute_statement('SELECT  "comments".* FROM "comments" WHERE "comments"."id" = ' + params[:id].to_s + ' LIMIT 1')
-      @comment = Comment.new(comment[0])
+      @comment = Comment.find_by_sql(['SELECT "comments".* FROM "comments" WHERE "comments"."id" = ? LIMIT 1', params[:id]])[0]
+      # comment = execute_statement('SELECT  "comments".* FROM "comments" WHERE "comments"."id" = ' + params[:id].to_s + ' LIMIT 1')
+      # @comment = Comment.new(comment[0])
     end
 
     def set_edit
-      @comment = Comment.find(params[:id])
+      # @comment = Comment.find(params[:id])
+      @comment = Comment.find_by_sql(['SELECT "comments".* FROM "comments" WHERE "comments"."id" = ? LIMIT 1', params[:id]])[0]
     end
 
     # Never trust parameters from the scary internet, only allow the white list through.
