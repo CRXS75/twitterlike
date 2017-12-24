@@ -1,14 +1,8 @@
 class UsersController < ApplicationController
   before_action :set_user, only: [:show, :edit, :update, :destroy, :feed, :following, :followers]
 
-  # GET /users
-  # GET /users.json
-  def index
-    @users = User.all
-  end
-
   def following
-    @follow = @user.following
+    @follow = User.find_by_sql(['SELECT "users".* FROM "users" INNER JOIN "relationships" ON "users"."id" = "relationships"."followed_id" WHERE "relationships"."follower_id" = ?', @user.id])
   end
 
   def search
@@ -20,7 +14,7 @@ class UsersController < ApplicationController
   end
 
   def followers
-    @follow = @user.followers
+    @follow = User.find_by_sql(['SELECT "users".* FROM "users" INNER JOIN "relationships" ON "users"."id" = "relationships"."follower_id" WHERE "relationships"."followed_id" = ?', @user.id])
   end
 
   def follow
@@ -57,8 +51,15 @@ class UsersController < ApplicationController
   def create
     @user = User.new(user_params)
 
+    if @user.valid?
+      sql_parts = ["INSERT INTO users (username, email, age, firstname, lastname, phone, password_digest, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                  @user.username, @user.email, @user.age, @user.firstname, @user.lastname, @user.phone, @user.password_digest, Time.now, Time.now]
+      sql = ApplicationRecord.send(:sanitize_sql_array, sql_parts)
+      id = ApplicationRecord.connection.insert(sql)
+    end
+
     respond_to do |format|
-      if @user.save
+      if @user.valid? && id
         format.html { redirect_to root_path, notice: 'User was successfully created.' }
         format.json { render :show, status: :created, location: @user }
       else
@@ -71,25 +72,34 @@ class UsersController < ApplicationController
   # PATCH/PUT /users/1
   # PATCH/PUT /users/1.json
   def update
-    respond_to do |format|
-      if @user.update(user_params)
-        format.html { redirect_to @user, notice: 'User was successfully updated.' }
-        format.json { render :show, status: :ok, location: @user }
+
+    if @user.username == user_params[:username] && @user.email == user_params[:email]
+      if user_params[:password].blank?
+        sql_parts = ["UPDATE users SET phone = ?, firstname = ?, lastname = ?, age = ?, updated_at = ?",
+                      user_params[:phone], user_params[:firstname], user_params[:lastname], user_params[:age], Time.now]
       else
-        format.html { render :edit }
-        format.json { render json: @user.errors, status: :unprocessable_entity }
+        sql_parts = ["UPDATE users SET username = ?, email = ?, phone = ?, firstname = ?, lastname = ?, age = ?, updated_at = ?, password_digest = ?",
+                    user_params[:username], user_params[:email], user_params[:phone], user_params[:firstname], user_params[:lastname], user_params[:age], Time.now, User.digest(user_params[:password])]
       end
     end
+
+    sql = ApplicationRecord.send(:sanitize_sql_array, sql_parts)
+     ApplicationRecord.connection.execute(sql)
+
+    #respond_to do |format|
+    #  if @user.update(user_params)
+    #    format.html { redirect_to @user, notice: 'User was successfully updated.' }
+    #    format.json { render :show, status: :ok, location: @user }
+    #  else
+    #    format.html { render :edit }
+    #    format.json { render json: @user.errors, status: :unprocessable_entity }
+    #  end
+    #end
   end
 
   # DELETE /users/1
   # DELETE /users/1.json
   def destroy
-    @user.destroy
-    respond_to do |format|
-      format.html { redirect_to users_url, notice: 'User was successfully destroyed.' }
-      format.json { head :no_content }
-    end
   end
 
   def feed

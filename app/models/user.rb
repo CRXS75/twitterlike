@@ -29,28 +29,35 @@ class User < ApplicationRecord
   end
 
   def follow(nuser)
-    following << nuser
+    sql_parts = ['INSERT INTO "relationships" ("follower_id", "followed_id", "created_at", "updated_at") VALUES (?, ?, ?, ?)', self.id, nuser.id, Time.now, Time.now]
+    sql = ApplicationRecord.send(:sanitize_sql_array, sql_parts)
+    result = ApplicationRecord.connection.insert(sql)
   end
 
   def unfollow(nuser)
-    following.delete(nuser)
+    sql_parts = ['DELETE FROM "relationships" WHERE "relationships"."follower_id" = ? AND "relationships"."followed_id" = ?', self.id, nuser.id]
+    sql = ApplicationRecord.send(:sanitize_sql_array, sql_parts)
+    ApplicationRecord.connection.execute(sql)
   end
 
   def following?(nuser)
-    following.include?(nuser)
+    sql_parts = ['SELECT 1 AS one FROM "users" INNER JOIN "relationships" ON "users"."id" = "relationships"."followed_id" WHERE "relationships"."follower_id" = ? AND "users"."id" = ? LIMIT 1', self.id, nuser.id]
+    sql = ApplicationRecord.send(:sanitize_sql_array, sql_parts)
+    results = ApplicationRecord.connection.execute(sql)
+    !results.column_values(0).empty?
   end
 
   def self.authenticate(login, submitted_password)
-    user = find_by_email(login)
+    user = User.find_by_sql(['SELECT "users".* FROM "users" WHERE "users"."email" = ? LIMIT 1', login])[0]
     if user.nil?
-      user = find_by_username(login)
+      user = User.find_by_sql(['SELECT "users".* FROM "users" WHERE "users"."username" = ? LIMIT 1', login])[0]
     end
     return nil if user.nil?
     return user if user.authenticate(submitted_password)
   end
 
   def self.authenticate_with_salt(id, cookie_salt)
-    user = find_by_id(id)
+    user = User.find_by_sql(['SELECT "users".* FROM "users" WHERE "users"."id" = ? LIMIT 1', id])[0]
     (user && user.salt == cookie_salt) ? user : nil
   end
 

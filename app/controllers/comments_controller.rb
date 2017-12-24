@@ -31,15 +31,18 @@ class CommentsController < ApplicationController
   # POST /comments.json
   def create
     @comment = Comment.new(:user => current_user, :micropost_id => params[:comment][:micropost_id], :content => params[:comment][:content])
-    @comment.save
+    sql_parts = ["INSERT INTO comments (content, user_id, micropost_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?)", @comment.content, current_user.id, @comment.micropost_id, Time.now, Time.now]
+    sql = ApplicationRecord.send(:sanitize_sql_array, sql_parts)
+    result = ApplicationRecord.connection.execute(sql)
     redirect_to micropost_path(params[:comment][:micropost_id])
   end
 
   # PATCH/PUT /comments/1
   # PATCH/PUT /comments/1.json
   def update
-
-    execute_statement('UPDATE comments SET content = \'' + params[:comment][:content].to_s + '\' WHERE id = ' + @comment.id.to_s)
+    content = ActiveRecord::Base.sanitize(params[:comment][:content])
+    id = ActiveRecord::Base.sanitize(@comment.id)
+    execute_statement("UPDATE comments SET content = #{content} WHERE id = #{id}")
 
     #respond_to do |format|
     #  if @comment.update(comment_params)
@@ -60,9 +63,11 @@ class CommentsController < ApplicationController
     id = @comment.micropost_id
     likes = Like.find_by_sql(['SELECT "likes".* FROM "likes" WHERE "likes"."comment_id" = ?', @comment.id])
     likes.each do |like|
-      execute_statement('DELETE FROM likes WHERE id = ' + like.id.to_s)
+      like_id = ActiveRecord::Base.sanitize(like.id)
+      execute_statement("DELETE FROM likes WHERE id = #{like_id}")
     end
-    @comment.destroy
+    comment_id = ActiveRecord::Base.sanitize(@comment.id)
+    execute_statement("DELETE FROM comments WHERE id = #{comment_id}")
     redirect_to micropost_path(id)
   end
 

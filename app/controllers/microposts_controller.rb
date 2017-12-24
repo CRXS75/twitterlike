@@ -14,13 +14,12 @@ class MicropostsController < ApplicationController
   # GET /microposts/1
   # GET /microposts/1.json
   def show
-    #@user = execute_statement('SELECT  "users".* FROM "users" WHERE "users"."id" = ' + @micropost.user_id.to_s + ' LIMIT 1')[0]
     @user = User.find_by_sql(['SELECT "users".* FROM "users" WHERE "users"."id" = ? LIMIT 1', @micropost.user_id])[0]
-    @likes = Like.count_by_sql(['SELECT COUNT(*) FROM "likes" WHERE "likes"."id" = ?', @micropost.id])
+    @likes = Like.count_by_sql(['SELECT COUNT(*) FROM "likes" WHERE "likes"."micropost_id" = ?', @micropost.id])
     @comments = Comment.count_by_sql(['SELECT COUNT(*) FROM "comments" WHERE "comments"."micropost_id" = ?', @micropost.id])
     @comment_list = Comment.find_by_sql(['SELECT "comments".* FROM "comments" WHERE "comments"."micropost_id" = ? ORDER BY created_at ASC', @micropost.id])
   end
-1
+
   # GET /microposts/new
   def new
     @micropost = Micropost.new
@@ -34,16 +33,24 @@ class MicropostsController < ApplicationController
   # POST /microposts.json
   def create
     @micropost = Micropost.new(micropost_params)
-
     @micropost.user = current_user
 
+    if @micropost.content.length > 140
+      format.html { render :new }
+      format.json { render json: "is too long (maximum is 140 characters)", status: :unprocessable_entity }
+    end
+
+    sql_parts = ["INSERT INTO microposts (content, user_id, created_at, updated_at) VALUES (?, ?, ?, ?)", @micropost.content, current_user.id, Time.now, Time.now]
+    sql = ApplicationRecord.send(:sanitize_sql_array, sql_parts)
+    result = ApplicationRecord.connection.execute(sql)
+
     respond_to do |format|
-      if @micropost.save
+      if result
         format.html { redirect_to @micropost, notice: 'Micropost was successfully created.' }
         format.json { render :show, status: :created, location: @micropost }
       else
         format.html { render :new }
-        format.json { render json: @micropost.errors, status: :unprocessable_entity }
+        format.json { render json: "Error", status: :unprocessable_entity }
       end
     end
   end
@@ -51,18 +58,9 @@ class MicropostsController < ApplicationController
   # PATCH/PUT /microposts/1
   # PATCH/PUT /microposts/1.json
   def update
-
-    execute_statement('UPDATE microposts SET content = \'' + params[:micropost][:content].to_s + '\' WHERE id = ' + @micropost.id.to_s)
-
-    #respond_to do |format|
-    #  if @micropost.update(micropost_params)
-    #    format.html { redirect_to @micropost, notice: 'Micropost was successfully updated.' }
-    #    format.json { render :show, status: :ok, location: @micropost }
-    #  else
-    #    format.html { render :edit }
-    #    format.json { render json: @micropost.errors, status: :unprocessable_entity }
-    #  end
-    #end
+    sql_parts = ["UPDATE microposts SET content = ?, updated_at = ?  WHERE id = ?", params[:micropost][:content], Time.now, @micropost.id]
+    sql = ApplicationRecord.send(:sanitize_sql_array, sql_parts)
+    ApplicationRecord.connection.execute(sql)
     redirect_to micropost_path(@micropost.id)
   end
 
@@ -71,13 +69,17 @@ class MicropostsController < ApplicationController
   def destroy
     comments = Comment.find_by_sql(['SELECT "comments".* FROM "comments" WHERE "comments"."micropost_id" = ?', @micropost.id])
     comments.each do |comment|
-      comment.destroy
+      comment_id = ActiveRecord::Base.sanitize(comment.id)
+      execute_statement("DELETE FROM comments WHERE id = #{comment_id}")
     end
     likes = @micropost.likes
+    likes = Like.find_by_sql(['SELECT "likes".* FROM "likes" WHERE "micropost_id" = ?', @micropost.id])
     likes.each do |like|
-      execute_statement('DELETE FROM likes WHERE id = ' + like.id.to_s)
+      like_id = ActiveRecord::Base.sanitize(like.id)
+      execute_statement("DELETE FROM likes WHERE id = #{like_id}")
     end
-    @micropost.destroy
+    micropost_id = ActiveRecord::Base.sanitize(@micropost.id)
+    execute_statement("DELETE FROM microposts WHERE id = #{micropost_id}")
     respond_to do |format|
       format.html { redirect_to microposts_url, notice: 'Post was successfully destroyed.' }
       format.json { head :no_content }
@@ -88,18 +90,20 @@ class MicropostsController < ApplicationController
   def create_like
     @micropost = Micropost.find_by_sql(['SELECT "microposts".* FROM "microposts" WHERE "microposts"."id" = ? LIMIT 1', params[:id]])[0]
     unless @micropost.have_liked(current_user)
-      likes = { user: current_user, micropost: @micropost }
-      @like = Like.new(likes)
-       @like.save
+      sql_parts = ["INSERT INTO likes (micropost_id, user_id, created_at, updated_at) VALUES (?, ?, ?, ?)", @micropost.id, current_user.id, Time.now, Time.now]
+      sql = ApplicationRecord.send(:sanitize_sql_array, sql_parts)
+      ApplicationRecord.connection.execute(sql)
+
     else
       # likes = @micropost.likes
       likes = Like.find_by_sql(['SELECT "likes".* FROM "likes" WHERE "likes"."micropost_id" = ?', @micropost.id])
       likes.each do |like|
         if like.user_id == current_user.id
-          execute_statement('DELETE FROM likes WHERE id = ' + like.id.to_s)
+          like_id = ActiveRecord::Base.sanitize(like.id)
+          execute_statement("DELETE FROM likes WHERE id = #{like_id}")
         end
       end
-    end
+1    end
     redirect_to :back
   end
 
@@ -107,15 +111,15 @@ class MicropostsController < ApplicationController
     @micropost = Micropost.find_by_sql(['SELECT "microposts".* FROM "microposts" WHERE "microposts"."id" =  ? LIMIT 1', params[:id]])[0]
     @comment = Comment.find_by_sql(['SELECT "comments".* FROM "comments" WHERE "comments"."id" = ? LIMIT 1', params[:comment_id]])[0]
     unless @comment.have_liked(current_user)
-      likes = { user: current_user, comment: @comment }
-      @like = Like.new(likes)
-      time = Time.now.to_s(:db)
-      @like.save
+      sql_parts = ["INSERT INTO likes (comment_id, user_id, created_at, updated_at) VALUES (?, ?, ?, ?)", @comment.id, current_user.id, Time.now, Time.now]
+      sql = ApplicationRecord.send(:sanitize_sql_array, sql_parts)
+      ApplicationRecord.connection.execute(sql)
     else
       likes = Like.find_by_sql(['SELECT "likes".* FROM "likes" WHERE "likes"."comment_id" = ?', @comment.id])
       likes.each do |like|
         if like.user_id == current_user.id
-          execute_statement('DELETE FROM likes WHERE id = ' + like.id.to_s)
+          like_id = ActiveRecord::Base.sanitize(like.id)
+          execute_statement("DELETE FROM likes WHERE id = #{like_id}")
         end
       end
     end
@@ -125,9 +129,6 @@ class MicropostsController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_micropost
-       # @micropost = Micropost.find(params[:id])
-      #micropost = execute_statement('SELECT  "microposts".* FROM "microposts" WHERE "microposts"."id" = ' + params[:id].to_s + ' LIMIT 1')
-      #@micropost = Micropost.new(micropost[0])
       @micropost = Micropost.find_by_sql(['SELECT  "microposts".* FROM "microposts" WHERE "microposts"."id" = ? LIMIT 1', params[:id]])[0]
     end
 

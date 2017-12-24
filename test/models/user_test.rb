@@ -5,34 +5,14 @@ class UserTest < ActiveSupport::TestCase
   #   assert true
   # end
 
-
-
   test "should create user" do
-    user = User.new(:username => "first", :email => "first@mail.com", :password => "tototo", :age => 22)
-    assert user.save, "Saved the article with params"
+    sql_parts = ["INSERT INTO users (username, email, age, firstname, lastname, phone, password_digest, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                 "user", "email@mail.com", 42, "firstname", "lastname", "061529634578", User.digest("password"), Time.now, Time.now]
+    sql = ApplicationRecord.send(:sanitize_sql_array, sql_parts)
+    id = ApplicationRecord.connection.insert(sql)
+
+    assert_not_empty User.find_by_sql(['SELECT "users".* FROM "users" WHERE "users"."id" = ? LIMIT 1', id]), "Save correct user"
   end
 
-  test "should not create user with no email" do
-    user = User.new(:username => "second",  :password => "tototo", :age => 22)
-    assert_not user.save, "Saved the article with no email"
-  end
-
-  test "should not create user with no login" do
-    user = User.new(:email => "third@mail.com",  :password => "tototo", :age => 22)
-    assert_not user.save, "Saved the article with no login"
-  end
-
-  test "should not create user with no password" do
-    user = User.new(:email => "third@mail.com", :age => 22)
-    assert_not user.save, "Saved the article with no password"
-  end
-
-  test "should not create user same login" do
-
-    user = User.new(:username => "first", :email => "foh@mail.com", :password => "tototo", :age => 22)
-    user.save
-    user = User.new(:username => "first", :email => "fourth@mail.com", :password => "tototo", :age => 22)
-    assert_not user.save, "Saved the article with same login"
-  end
 
 end
