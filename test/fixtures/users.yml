@@ -1,2 +1,6 @@
 # Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
-
+premade:
+  username: "zero"
+  email: "zero@mail.com"
+  passworddigest: "password"
+  age: 42

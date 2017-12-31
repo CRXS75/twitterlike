@@ -5,7 +5,7 @@ class MicropostTest < ActiveSupport::TestCase
   #   assert true
   # end
   setup do
-    @user = User.create(:username => 'toto', :email => 'toto@mail.com', :password_digest => User.digest('tototo'), :age => 42)
+    @user = User.create(:username => 'toto', :email => 'toto@mail.com', :password => 'tototo', :age => 42)
   end
 
   test "should create post" do

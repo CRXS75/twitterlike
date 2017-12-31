@@ -51,7 +51,9 @@ class UsersController < ApplicationController
   def create
     @user = User.new(user_params)
 
-    if @user.valid?
+    valid = @user.valid?
+
+    if valid
       sql_parts = ["INSERT INTO users (username, email, age, firstname, lastname, phone, password_digest, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                   @user.username, @user.email, @user.age, @user.firstname, @user.lastname, @user.phone, @user.password_digest, Time.now, Time.now]
       sql = ApplicationRecord.send(:sanitize_sql_array, sql_parts)
@@ -59,8 +61,8 @@ class UsersController < ApplicationController
     end
 
     respond_to do |format|
-      if @user.valid? && id
-        format.html { redirect_to root_path, notice: 'User was successfully created.' }
+      if valid && id
+        format.html { redirect_to '/signin', notice: 'User was successfully created.' }
         format.json { render :show, status: :created, location: @user }
       else
         format.html { render :new }

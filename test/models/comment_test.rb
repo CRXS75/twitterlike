@@ -6,7 +6,7 @@ class CommentTest < ActiveSupport::TestCase
   # end
 
   setup do
-    @user = User.create(:username => 'toto', :email => 'toto@mail.com', :password_digest => User.digest('tototo'), :age => 42)
+    @user = User.create(:username => 'toto', :email => 'toto@mail.com', :password => 'tototo', :age => 42)
     @micropost = Micropost.create(:content => "Ceci est un post", :user_id => @user.id)
   end
 

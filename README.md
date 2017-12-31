@@ -1,24 +1,20 @@
 # README
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+* VERSIONS
+  Ruby version ruby 2.3.1p112
+  Ruby On Rails 5.06
 
-Things you may want to cover:
+** EXECUTE COMMANDS IN PROJECT ROOT FOLDER **
 
-* Ruby version
+* Install dependencies
+  command "gem install bundle"
+  command "bin/bundle install"
 
-* System dependencies
+* Create and Initialize DB
+  command "bin/rake db:setup"
 
-* Configuration
+* Start server
+  command "bin/rails server -p [port]
 
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+* Execute test
+  command "bin/rake test:models"

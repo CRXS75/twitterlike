@@ -24,7 +24,7 @@ class User < ApplicationRecord
   has_secure_password
 
   def self.search(search)
-    find_by_sql(['SELECT "users".* FROM "users" WHERE "users"."username" LIKE ?', '%' + search + '%'])
+    find_by_sql(['SELECT "users".* FROM "users" WHERE "users"."username" LIKE ?', '%' + search + '%']) +
     find_by_sql(['SELECT "users".* FROM "users" WHERE "users"."email" LIKE ?', '%' + search + '%'])
   end
 
